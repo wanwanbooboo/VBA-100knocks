@@ -1,0 +1,40 @@
+Option Explicit
+
+'#VBA100本ノック 3本目
+'画像のように1行目に見出し､A列に№が入っています｡
+'№の行数およびデータ行数は毎回変化します｡
+'この表の見出し（1行目）と№（A列）を残して、データ部分のみ値を消去してください。
+'※シートはアクティブシート
+ 
+ Sub VBAknocks_003()
+ 
+    Worksheets("sheet1").Range("A1").CurrentRegion.Offset(1, 1).ClearContents
+ 
+ End Sub
+'
+'模範解答
+'   Range("A1").CurrentRegion.Offset(1, 1).ClearContents
+'Resizeを使って1行1列減らしている解答が目につきました｡
+'CurrentRegionは空白セルで囲まれた範囲なので、Offset(1, 1)でずれた範囲のセルは必ず空欄です。
+'ClearContentsであれば､はみ出た部分については気にしなくても良いでしょう｡
+先に書いたように、Offset(1, 1)かつClearContentsであればズレてはみ出した部分については気にする必要が無いのですが、
+'きっちり表範囲だけで指定する場合について追記しておきます｡
+'簡単な方法としてResizeとIntersectを使う方法がありますが､Intersectの方がより簡素な記述で済みます｡
+'
+'Resizeを使う方法：
+'   With ActiveSheet.Range("A1").CurrentRegion
+'       .Offset(1, 1).Resize(.Rows.Count - 1, .Columns.Count - 1).ClearContents
+'   End With
+'または
+'   Dim rng As Range
+'   Set rng = ActiveSheet.Range("A1").CurrentRegion
+'   rng.Offset(1, 1).Resize(rng.Rows.Count - 1, rng.Columns.Count - 1).ClearContents
+'
+'Intersectを使う方法：
+'   With Range("A1").CurrentRegion
+'        Intersect(.Cells, .Offset(1, 1)).ClearContents
+'   End With
+'または
+'   Dim rng As Range
+'   Set rng = ActiveSheet.Range("A1").CurrentRegion
+'   Intersect(rng, rng.Offset(1, 1)).ClearContents
