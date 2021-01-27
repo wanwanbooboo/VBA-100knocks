@@ -1,0 +1,47 @@
+Option Explicit
+
+'#VBA100本ノック 4本目
+'画像のように1行目に見出し､A列に№が入っています｡
+'この表範囲の一部には計算式が入っています｡
+'（画像の最下行とD列には数式が入っています。）
+'データ行数は毎回変化します｡
+'見出し行とA列№と計算式は残し､定数値だけを消去してください｡
+'※画像ならB2: C11を消去
+
+Sub VBAknock_004()
+
+    Range("A1").CurrentRegion.Offset(1, 1).SpecialCells(xlCellTypeConstants).ClearContents
+
+End Sub
+
+'模範解答
+'Dim rng As Range
+'Set rng = Range("A1").CurrentRegion.Offset(1, 1)
+'On Error Resume Next
+'rng.SpecialCells(xlCellTypeConstants).ClearContents
+'
+'SpecialCellsは､該当セルが存在しない場合エラーとなるのでOn Errorで対応します｡
+'
+'計算式が入っている列・行が特定できる場合は、ResizeまたはIntersectで範囲を絞ってもよいでしょう。
+'
+'消去する条件によっては1セルずつ判定しなければならない場合もあるかもしれません｡
+'そのような場合は､HasFormulaプロパティで計算式の有無を判定できます｡
+'
+'例えば、表範囲の外側の行・列を除いた範囲を求めたい場合は、
+'Offset(1, 1)とOffset(-1, -1)、このIntersectで作ることができます。
+'しかし、開始点がA列または1行目の場合は(-1, -1)がエラーになってしまうので、一工夫必要になります。
+'With Range("A1").CurrentRegion
+'    With Intersect(.Cells, .Offset(1, 1))
+'        Intersect(.Cells, .Offset(-1, -1)).ClearContents
+'    End With
+'End With
+'
+'計算式が入っている列が飛び飛びだったりした場合でも､当該行列を別途求めるようにVBAを書けばできますが少し面倒ですね｡
+'何より､そもそも数式が入っている列がはっきりしないような場合は､セルを1つずつ判定することになってしまいます｡
+'Dim rng As Range
+'For Each rng In Range("A1").CurrentRegion.Offset(1, 1)
+'    If Not rng.HasFormula Then
+'        rng.ClearContents
+'    End If
+'Next
+'単に定数値というだけではなく別の条件もあるような場合は､HasFormulaで判定しなければならない場合も出てくると思います｡
