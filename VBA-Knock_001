@@ -1,0 +1,18 @@
+Option Explicit
+'VBA100ノック 1本目
+'「Sheet1」のA1:C5のセル範囲を、「Sheet2」のA1:C5にコピーしてください。
+'値も数式も書式も全てコピーしてください｡
+'ただしSelectメソッドは使用禁止
+'※行高と列幅の設定はしなくて良い｡
+
+Sub vbaknock_1()
+    Worksheets("Sheet1").Range("A1:C5").Copy
+    Worksheets("Sheet2").Range("A1:C5").PasteSpecial Paste:=xlPasteAll
+    Application.CutCopyMode = False
+End Sub
+
+'別回答
+'Worksheets(""Sheet1"").Range(""A1:C5"").Copy
+'Destination:=Worksheets(""Sheet2"").Range(""A1"")    Destinationは省略可｡
+'Application.CutCopyMode = False
+'これを忘れると､マクロVBA終了後もコピー範囲の動く点々が残ってしまうので､忘れないようにしましょう｡
