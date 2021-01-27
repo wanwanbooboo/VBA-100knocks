@@ -1,0 +1,27 @@
+Option Explicit
+
+'VBA100本ノック 2本目
+'「Sheet1」のA1:C5のセル範囲を、「Sheet2」のA1:C5にコピーしてください。
+'数式は消して値でコピー､書式もコピーしてください｡
+'※書式は「セルの書式設定」で設定可能なもの（ロックは除く）。
+'入力規則やメモ（旧コメント）は書式ではありません。
+'「ふりがな」は任意で
+
+Sub vbaknocks_002()
+    Worksheets("sheet1").Range("A1:C5").Copy
+    Worksheets("sheet2").Range("A1:C5").PasteSpecial Paste:=xlPasteValues
+    Worksheets("sheet2").Range("A1:C5").PasteSpecial Paste:=xlPasteFormats
+    Application.CutCopyMode = False
+End Sub
+
+'模範回答
+'Worksheets(""Sheet1"").Range(""A1:C5"").Copy
+'Worksheets(""Sheet2"").Range(""A1"").PasteSpecial Paste:=xlPasteFormats '書式
+'Worksheets(""Sheet2"").Range(""A1"").PasteSpecial Paste:=xlPasteValues '値
+'Application.CutCopyMode = False
+'「ふりがな」もコピーされます
+'ペースト時には同じ範囲だけしてしなければならず、ミスの元なので頭だけ指定するのが吉
+'前記の値のコピー部分は以下のように書くことができます｡
+'Worksheets(""Sheet2"").Range(""A1:C5"").Value = Worksheets(""Sheet1"").Range(""A1:C5"").Value
+'※Valueは省略できません｡ (正確には右辺のValueが省略できない)
+'「ふりがな」はコピーされない
