@@ -1,0 +1,62 @@
+Option Explicit
+
+'#VBA100本ノック 5本目
+'画像のようにB2から始まる表があります｡
+'B列×C列を計算した値をD列に入れ、通貨\のカンマ編集で表示してください。
+'ただしB列またはC列が空欄の場合は空欄表示にしてください｡
+'例.D2にはB3×C3の計算結果の値を「\234,099」で表示、D5は空欄
+'※ブック・シートは任意
+
+Sub VBAknock_005()
+
+    Dim i As Integer
+    Dim last_num As Long
+    
+    last_num = Range("B1048576").End(xlUp).Row
+    For i = 3 To last_num
+        If Cells(i, 2).Value = "" Or Cells(i, 3).Value = "" Then
+            Cells(i, 4).Value = ""
+        Else
+            Cells(i, 4).Value = Cells(i, 2).Value * Cells(i, 3).Value
+        End If
+    Next
+    Range("D3:D" & last_num).NumberFormatLocal = "\#,##0"
+
+End Sub
+
+'解答例
+'Dim i As Long
+'For i = 3 To Range("B2").CurrentRegion.Rows.Count + 1
+'    If Cells(i, 2) = "" Or Cells(i, 3) = "" Then
+'        Cells(i, 4) = ""
+'    Else
+'        Cells(i, 4) = Cells(i, 2) * Cells(i, 3)
+'    End If
+'Next
+'Columns("D").NumberFormatLocal = "\#,##0"
+'
+'\の設定はNumberFormatLocalを使います。
+'
+'上記コードの場合､
+'B列C列ともに空欄（つまり空行）があるような場合は、空行より下は処理されません。
+'End(xlUp)を使う場合、非表示行が無いことが前提となります。
+'UsedRangeを使う場合は､他の列にゴミデータがあると行数が大きくなってしまいます｡
+'これらについては､記事の補足で｡
+'
+'補足
+'上記のVBAでは表示形式を列全体で指定しています｡
+'表範囲内だけにしたいと思うかもしれませんが､エクセルのシートの列は同一書式で使う事が基本です｡
+'とはいえ､範囲を限定したい場合の紹介も兼ねて､少し違ったVBAの書き方をしてみます｡
+'
+'Dim rng As Range
+'Set rng = Range("B2").CurrentRegion
+'Set rng = Intersect(rng, rng.Offset(1, 2))
+'rng.ClearContents
+'rng.NumberFormatLocal = "\#,##0"
+'Dim i As Long
+'For i = rng.Row To rng.Row + rng.Rows.Count - 1
+'    If Cells(i, 2) <> "" And Cells(i, 3) <> "" Then
+'        Cells(i, 4) = Cells(i, 2) * Cells(i, 3)
+'    End If
+'Next
+'
