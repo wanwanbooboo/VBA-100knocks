@@ -17,6 +17,8 @@ Sub VBAknock_006()
             Cells(i, 4).Value = Cells(i, 2).Value * Cells(i, 3).Value
         End If
     Next
+    
+    set myrange = nothing
 
 End Sub
 
