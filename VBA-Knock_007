@@ -1,0 +1,115 @@
+Option Explicit
+
+'#VBA100本ノック 7本目
+'A列は文字列データ（表示形式が文字列）で日付が入っています。
+'日付とみなされる場合はB列に月末日付をmmddの形式で出力してください｡
+'日付け以外の場合は空欄にしてください｡
+'例.B2は「0930」と出力する。
+'※何をもって日付とみなすかも含めて考えてください｡
+
+Sub VBAknock_007()
+
+    Dim i As Integer
+    Dim last_row As Long
+    Dim strdate As String
+    
+    
+    last_row = Range("A1").CurrentRegion.Rows.Count
+    
+    For i = 2 To last_row
+    strdate = Cells(i, 1).Value
+        If IsDate(strdate) = True Then
+            Cells(i, 2).Value = DateValue(strdate)
+        End If
+    Next
+    
+End Sub
+
+'解答例
+'日付の判定はIsDate関数を使います｡
+'ただし人が日付と認識するものとは少しずれがあります｡
+'どのような経緯で発生したデータかによって注意して使ってください｡
+'添付ではIsDateでFalse判定される中から"."区切りだけを救っています。
+'シート指定は省略しています｡
+'
+'Sub VBA100_07()
+'    Dim i As Long
+'    Dim d As Variant
+'    For i = 2 To Cells(Rows.Count, 1).End(xlUp).Row
+'        d = Replace(Cells(i, 1).Value, ".", "/")
+'        If IsDate(d) Then
+'            d = CDate(d)
+'            Cells(i, 2) = Format(DateSerial(Year(d), Month(d) + 1, 0), "'mmdd")
+'        Else
+'            Cells(i, 2) = ""
+'        End If
+'    Next
+'End Sub
+'
+'
+'末日の算出はDateSerial関数を使うと簡単です｡
+'問題文は「mmddの形式で出力」なので、表示形式ではなくデータとしてmmddで出力しました。
+'元号の合字はIsDateがFalseになります｡
+'これを救うには1文字ずつ変換するしかありません｡
+'※何をもって日付とするかは適宜変わってくると思います｡
+'
+'
+'日付の判定及び末日算出の詳細については､記事の補足をお読みください｡
+'元号の合字を変換するFunctionのVBAサンプルも掲載しておきました｡
+'
+'補足
+'コンピューター処理において日付はかなり厄介なものです｡
+'特に文字列として日付が入っている場合は､それが日付なのかどうか判断に困る場合も多々あります｡
+'今回の主題としては､IsDate関数とCDate関数の挙動について把握することにあります｡
+'
+'今回の解答としては､IsDateで日付判定されるものはそのまま信用して､
+'それ以外に､人間が見た時に日付とみなされそうなものを救って見ようという主旨で作成しました｡
+'
+'エクセルだけで考えたら､日付を正しく入力しましょう｡
+'という事になりますが､VBAが扱うデータはエクセルで入力したものとは限りません｡
+'他システムからの出力データやWEBからのコピーデータを扱う事も多いので､日付けデータの形式については理解しておきましょう｡
+'
+'
+'日付けの判定について
+'日付かどうかを判定する関数としてVBAにはIsDate関数があります｡
+'これは、Date型（つまりシリアル値）に変換可能かの判定になります。
+'あくまでVBAがDate型に変換できるかどうかであり､人の見た目で日付とみなすかどうかとは関係ありません｡
+'この点に注意して使ってください｡
+'
+'日付 IsDate
+'2020/9/1    True
+'2020/9/02   True
+'10/3    True
+'20 10 4 True
+'2020.10.5   False
+'2020-10-6   True
+'令和元年10月 True
+'令1年11月2日 True
+'令元年11月03日 True
+'Print 元年11月04日; False
+'
+'IsDate関数でTrueならCDateでシリアル値に変換できます｡
+'合字について
+'VBA マクロ 日付 IsDate CDate
+'これらの文字については､IsDateは元号として認識しません｡
+'またVBAで固定文字として入れようとした時､
+'VBA マクロ 日付 IsDate CDate
+'これは、?となってしまいます。
+'これは文字コードの問題です｡
+'以下のFunctionは､この元号の合字をIsDateが認識できる元号に変換するものです｡
+'
+'Function EditDate(ByVal d As String) As String
+'    Dim g1, g2
+'    g1 = Array(&H337E, &H337D, &H337C, &H337B, &H32FF)
+'    g2 = Array("明治", "大正", "昭和", "平成", "令和")
+'    Dim i As Long
+'    For i = LBound(g1) To UBound(g1)
+'        If InStr(d, ChrW(g1(i))) > 0 Then
+'            d = Replace(d, ChrW(g1(i)), g2(i))
+'            Exit For
+'        End If
+'    Next
+'    EditDate = d
+'End Function
+'
+'令和以外はVBAに直接合字を記入できますが､令和に合わせて文字コードで記載しました｡
