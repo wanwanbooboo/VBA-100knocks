@@ -11,6 +11,12 @@ Sub VBAknock_009()
     Dim last_row As Long
     
     last_row = Cells(Rows.Count, 1).End(xlUp).Row - 1
+    
+    On Error Resume Next
+    Application.DisplayAlerts = False
+    Worksheets("合格者").Delete
+    Application.DisplayAlerts = True
+    On Error GoTo 0
 
     Worksheets.Add After:=Worksheets(Worksheets.Count)
     ActiveSheet.Name = "合格者"
