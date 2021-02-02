@@ -1,0 +1,141 @@
+Option Explicit
+
+'#VBA100本ノック 9本目
+'「成績表」シートに5教科の成績とG列に合否判定があります。
+'「合格者」シートを新規作成し、合格者の氏名だけをA列に列挙してください。
+'※点数は非公開なので「合格者」シートには間違っても出力しないでください。
+'※何度でも実行できるようにしてください｡
+
+Sub VBAknock_009()
+
+    Dim last_row As Long
+    
+    last_row = Cells(Rows.Count, 1).End(xlUp).Row - 1
+
+    Worksheets.Add After:=Worksheets(Worksheets.Count)
+    ActiveSheet.Name = "合格者"
+
+    With Worksheets("成績表").Range("A1").CurrentRegion
+        .AutoFilter Field:=7, Criteria1:="合格"
+        .Resize(last_row, 1).Copy Destination:=Worksheets("合格者").Range("A1")
+    End With
+    
+    Worksheets("成績表").AutoFilterMode = False
+
+End Sub
+
+'解答例
+'データの絞り込みにはオートフィルターが便利です｡
+'使用する上ではいくつか注意点がありますが､VBA記述が簡単であり､速度も速いので是非習得してください｡
+'手動でオートフィルターで絞り込みされている場合もあるので､最初にオートフィルターを解除しています｡
+'
+'Sub VBA100_09_01()
+'    Dim wsIn As Worksheet
+'    Dim wsOut As Worksheet
+'
+'    On Error Resume Next
+'    Application.DisplayAlerts = False
+'    Worksheets("合格者").Delete
+'    Application.DisplayAlerts = True
+'    On Error GoTo 0
+'
+'    Set wsIn = Worksheets("成績表")
+'    Set wsOut = Worksheets.Add(After:=wsIn)
+'    wsOut.Name = "合格者"
+'
+'    wsIn.AutoFilterMode = False
+'    With wsIn.Range("A1").CurrentRegion
+'        .AutoFilter Field:=7, Criteria1:="合格"
+'        .Columns(1).Copy wsOut.Range("A1")
+'    End With
+'    wsIn.AutoFilterMode = False
+'End Sub
+'
+'
+'「合格者」シートはどうせ削除するならOn Errorを設定した上でとにかく削除してしまえ、という発想にしています。
+'もちろん､ループで確認したほうが良いとは思います｡
+'こちらはシートがあればそれを活用し無ければ挿入するFunctionのサンプルです｡
+'※名前の妥当性はチェックしていません｡
+'
+'Function getSheet(ByVal Name As String, _
+'                  Optional ByVal Before As Object, _
+'                  Optional ByVal After As Object) As Worksheet
+'    For Each getSheet In Worksheets
+'        If getSheet.Name = Name Then
+'            getSheet.Cells.Clear
+'            Exit Function
+'        End If
+'    Next
+'
+'    If Not Before Is Nothing Then
+'        Set getSheet = Worksheets.Add(Before:=Before)
+'    ElseIf Not After Is Nothing Then
+'        Set getSheet = Worksheets.Add(After:=After)
+'    Else
+'        Set getSheet = Worksheets.Add
+'    End If
+'
+'    getSheet.Name = "合格者"
+'End Function
+'
+'
+'前ツイートのFunctionを使いオートフィルター以外で合格者氏名を抽出するVBAサンプルを補足に掲載しました｡
+'
+'
+'補足
+'手動でオートフィルターをかけていた場合､AutoFilterを使うと元のフィルター状態が消えてしまいます｡
+'手動のオートフィルターの状態を保存しておいて後で回復させようなどとは考えない方が良いでしょう｡
+'VBA作成の労力が見合うとは思えません｡
+'どうしてもオートフィルターを解除したくないのであれば､別の方法を検討してください｡
+'シートをコピーしてコピー先のシートでAutoFilterを使うとか､
+'以下のようにAutoFilterを使わずに抽出する方法を検討してください｡
+'
+'エクセルVBAでは基本中の基本です｡
+'「成績表」シートを上から順にみていき、「合格」のA列の氏名を「合格者」シートに順にコピーします。
+'Sub VBA100_09_02()
+'    Dim wsIn As Worksheet
+'    Dim wsOut As Worksheet
+'    Set wsIn = Worksheets("成績表")
+'    Set wsOut = getSheet(Name:="合格者", After:=wsIn)
+'
+'    Dim ary
+'    ary = wsIn.Range("A1").CurrentRegion
+'
+'    Dim i As Long, j As Long
+'    wsOut.Range("A1") = "氏名"
+'    j = 1
+'    For i = LBound(ary) + 1 To UBound(ary)
+'        If ary(i, 7) = "合格" Then
+'            j = j + 1
+'            wsOut.Cells(j, 1) = wsIn.Cells(i, 1)
+'        End If
+'    Next
+'End Sub
+'
+'
+'速度対策としては配列を使うのが良いでしょう｡
+'以下は､配列を使った少し変わった方法で書いてみました｡
+'Sub VBA100_09_03()
+'    Dim wsIn As Worksheet
+'    Dim wsOut As Worksheet
+'    Set wsIn = Worksheets("成績表")
+'    Set wsOut = getSheet(Name:="合格者", After:=wsIn)
+'
+'    Dim ary1, ary2
+'    ary1 = Intersect(wsIn.Range("A1").CurrentRegion, wsIn.Columns("A"))
+'    ary2 = Intersect(wsIn.Range("A1").CurrentRegion, wsIn.Columns("G"))
+'
+'    Dim i As Long
+'    For i = LBound(ary2) + 1 To UBound(ary2)
+'        If ary2(i, 1) <> "合格" Then
+'            ary1(i, 1) = ""
+'        End If
+'    Next
+'
+'    wsOut.Range("A1").Resize(UBound(ary1) - LBound(ary1) + 1) = ary1
+'    On Error Resume Next
+'    wsOut.Cells.SpecialCells(xlCellTypeBlanks).Delete Shift:=xlUp
+'End Sub
+'
+'先のFunctionではシート名の妥当性チェックを行っていません｡
+'挿入可能なシート名の判定はかなり面倒です｡
