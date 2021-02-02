@@ -1,0 +1,112 @@
+Option Explicit
+'
+'#VBA100本ノック 8本目
+'「成績表」シートに5教科の成績表があります。
+'以下の2条件を満たした者が合格となります｡
+'・5教科合計が350点以上
+'・全ての科目が50点以上
+'G列に、合格者に対しては「合格」と出力し、不合格は空欄にしてください。
+
+Sub VBAknock_008()
+    
+    Dim i As Integer, j As Integer
+    Dim last_num As Long
+    
+    last_num = Range("A1").CurrentRegion.Rows.Count
+    
+    For i = 1 To last_num
+        For j = 2 To 6
+            If Cells(i, j).Value < 50 Then
+                Cells(i, 7).Value = ""
+                Exit For
+            End If
+        Next
+        If WorksheetFunction.Sum(Range(Cells(i, 2), Cells(i, 6))) >= 350 Then
+            Cells(i, 7).Value = "合格"
+        Else
+            Cells(i, 7).Value = ""
+        End If
+    Next
+
+End Sub
+
+'解答例
+'まず最初は､このような処理がすんなり書けるようになることを目指してください｡
+'ただし､データ件数が多くなると処理時間が気になってきます｡
+'
+'Sub VBA100_08_01()
+'    Dim ws As Worksheet
+'    Set ws = Worksheets("成績表")
+'
+'    Dim i As Long, j As Long, t As Long
+'    For i = 2 To ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+'        t = 0
+'        For j = 2 To 6
+'            If ws.Cells(i, j) < 50 Then
+'                t = 0
+'                Exit For
+'            End If
+'            t = t + ws.Cells(i, j)
+'        Next
+'        ws.Cells(i, 7) = ""
+'        If t >= 350 Then
+'            ws.Cells(i, 7) = "合格"
+'        End If
+'    Next
+'End Sub
+'
+'
+'ワークシートにはエクセルならではの豊富な関数があります｡
+'VBAでシート関数を使うには､WorksheetFunctionクラスを使います｡
+'また､Intersect､Offset､Resize､これらを組み合わせることで任意のRange範囲を指定できます｡
+'
+'Sub VBA100_08_02()
+'    Dim ws As Worksheet
+'    Set ws = Worksheets("成績表")
+'
+'    Dim rng As Range
+'    Set rng = ws.Range("A1").CurrentRegion
+'    Set rng = Intersect(rng, rng.Offset(1))
+'    rng.Columns("G").ClearContents
+'
+'    Dim r As Range
+'    For Each r In rng.Rows
+'        With WorksheetFunction
+'            If .Sum(r.Offset(, 1).Resize(, 5)) >= 350 And _
+'               .CountIf(r.Offset(, 1).Resize(, 5), ">=50") = 5 Then
+'                r.Columns("G") = "合格"
+'            End If
+'        End With
+'    Next
+'End Sub
+'
+'
+'今回は､入力値が正しく数値で入力されているかの判定は省略しました｡
+'データによっては､事前に正の整数値で正しく入力されているかの確認が重要になる場合もあります｡
+'そのような場合についての問題は今後に｡
+'
+'
+'補足
+'最初のVBAについては､細部はともかくとして､このようなループでの足し上げはいつでも書けるようにしておきましょう｡
+'
+'Intersectは､Applicationのメソッドです｡
+'OffsetとResizeは､Rangeのプロパティです｡
+'これらが使いこなせると､VBAの書き方が大きく変わってきます｡
+'是非実際に使って習得してください｡
+'
+'合計が350点以上は､SUM関数を使えば良いですね｡
+'全て50点以上、これはCOUNTIF(S)関数で">=50"この指定で件数を取得することができます。
+'5教科なので= 5で良いですね。
+'
+'全て50点以上､これは最低が50点以上と読み替えることができます｡
+'最低を求める関数はMIN関数ですね｡
+'.Min (r.Offset(, 1).Resize(, 5)) >= 50
+'ただし､未受験で空欄があり得るのでは､というようなツイートもありましたので､
+'5 科目全てに点数が付いていることを確認する必要が出てくるかもしれません｡
+'その場合は､COUNT関数で件数確認を追加しなければならなくなります｡
+'.Count(r.Offset(, 1).Resize(, 5)) = 5
+'
+'エクセルVBAでは､ワークシート関数が使える場面では積極的に使っていくと良いです｡
+'ワークシート関数の多くは非常に高速に動作しますので､ぜひ活用してください｡
+
+
