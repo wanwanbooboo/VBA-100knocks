@@ -1,0 +1,81 @@
+Option Explicit
+
+'#VBA100本ノック 10本目
+'画像のように「受注」シートに今月の受注データがあります。
+'受注数が空欄かつ備考欄に「削除」または「不要」の文字が含まれている行を削除してください。
+'行の削除は行全体を削除してください｡
+'サンプルでは5行目と10行目を削除
+'※シートは任意
+
+Sub delete()
+
+    Dim i As Integer
+    Dim data_num As Integer
+    Dim word1 As String
+    Dim word2 As String
+    
+    word1 = "削除"
+    word2 = "不要"
+    data_num = Range("A1").CurrentRegion.Rows.Count
+    
+    For i = data_num To 2 Step -1
+        If InStr(Cells(i, 4).Value, word1) <> 0 Or InStr(Cells(i, 4).Value, word2) <> 0 Then
+            Cells(i, 1).EntireRow.delete shift:=xlUp
+        End If
+    Next i
+
+End Sub
+
+'解答例
+'回答で多かったのがAutoFilterを使ったものでした｡
+'前回からの流れというものもあったと思います｡
+'オートフィルターは簡便であり速度も速いのですが､少々癖があり特に削除で使う場合は注意が必要です｡
+'
+'Sub VBA100_10_01()
+'    Dim ws As Worksheet
+'    Set ws = Worksheets("受注")
+'
+'    Application.ScreenUpdating = False
+'    ws.AutoFilterMode = False
+'
+'    Dim rng As Range
+'    With ws.Range("A1").CurrentRegion
+'        .AutoFilter field:=3, Criteria1:=""
+'        .AutoFilter field:=4, Criteria1:="*削除*", Operator:=xlOr, Criteria2:="*不要*"
+'        Set rng = Intersect(.Offset(1), .SpecialCells(xlCellTypeVisible))
+'        If Not rng Is Nothing Then rng.EntireRow.delete
+'    End With
+'
+'    ws.AutoFilterMode = False
+'    Application.ScreenUpdating = True
+'End Sub
+'
+'
+'素直に最下行から順に削除していってみましょう｡
+'行数が多くなると遅いと言われますが､それは削除する行数の問題です｡
+'実際に削除する行数が1,000行くらいなら、そんなに時間はかかりません。
+'今回の問題の想定であれば1行ずつでも十分だと思います｡
+'
+'Sub VBA100_10_02()
+'    Dim ws As Worksheet
+'    Set ws = Worksheets("受注")
+'
+'    Application.ScreenUpdating = False
+'
+'    Dim i As Long
+'    For i = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row To 2 Step -1
+'        If ws.Cells(i, 3).Value = "" Then
+'            If ws.Cells(i, 4).Value Like "*削除*" Or _
+'               ws.Cells(i, 4).Value Like "*不要*" Then
+'               ws.Rows(i).delete
+'            End If
+'        End If
+'    Next
+'
+'    Application.ScreenUpdating = True
+'End Sub
+'
+'Like演算子を使う方がinStrを使うより楽
+'
+'削除対象行をUnionで合体していき､最後に一括で削除するVBAは補足に掲載しました｡
+'ただしこの方法も､削除する行が飛び飛びバラバラの場合は､先の1行ずつ削除と速度はあまり変わりません｡
