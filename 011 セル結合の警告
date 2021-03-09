@@ -1,0 +1,141 @@
+Option Explicit
+'#VBA100本ノック 11本目
+'11…同じ数字が並んでいる、これは結合したのか、、、
+'
+'画像のようにシートにはところどころにセル結合があります｡
+'これは放置しておく訳にはいきません｡
+'セル結合されているセルには、メモ（旧コメント）で警告文を出しましょう。
+'※シートは任意､警告文はご随意に
+
+
+Sub vbaknocks_011()
+    Dim i As Integer
+    Dim j As Integer
+    Dim ws As Worksheet:    Set ws = Worksheets("セル結合")
+    Dim arr: arr = ws.Range("A1").CurrentRegion
+    
+    For i = LBound(arr, 1) To UBound(arr, 1)
+        For j = LBound(arr, 2) To UBound(arr, 2)
+            If ws.Cells(i, j).MergeCells Then
+                If TypeName(ws.Cells(i, j)) <> "comment" Then
+                    Cells(i, j).AddComment ("結合セルは解除してください")
+                End If
+            End If
+        Next
+    Next
+    
+    Set ws = Nothing
+End Sub
+
+'解答例
+'セル結合されているかはRangeオブジェクトのMergeCellsプロパティで判断します｡
+'結合されている範囲はMergeAreaで取得します｡
+'コメントの追加は結合範囲の先頭セルに入れます｡
+'結合範囲の他のセルに入れても問題ありませんが､少々無駄な処理になってしまいます｡
+'
+'Sub VBA100_11_01()
+'    Dim ws As Worksheet
+'    Set ws = ActiveSheet
+'    Dim rng As Range
+'    For Each rng In ws.Range("A1").CurrentRegion
+'        If rng.MergeCells Then
+'                   ’MergeArea(1，1)で結合セルの一行一列目に移動
+'            If rng.Address = rng.MergeArea(1).Address Then
+'                If Not rng.Comment Is Nothing Then
+'                    rng.ClearComments
+'                End If
+'                rng.AddComment "セル結合ダメ！"
+'                   '下はコメントのレイアウト変更
+'                rng.Comment.Shape.TextFrame.AutoSize = True
+'                rng.Comment.Visible = True
+'            End If
+'        End If
+'    Next
+'End Sub
+'
+'
+'先のVBAではCurrentRegionにしましたが､シート全体ならUsedRangeになるでしょう｡
+'しかし､使用セル範囲が大きいと膨大な時間がかかってしまいます｡
+'記事補足では､Findを使って結合セルを見つけるVBAを掲載しました｡
+'また､ちょっとお遊びになりますが､コメントのレイアウトも変更しています｡
+'
+'
+'補足
+'先のVBAの結果
+'VBA マクロ 100本ノック
+'
+'Findメソッドで結合セルを見つけて処理
+'※このVBAでも､XFD1048576まで使っていたら､とても時間がかかります｡
+'
+'Sub VBA100_11_02()
+'    Dim MergeMsg As String
+'    MergeMsg = "セル結合なんて" & Chr(10) & "信じられない！"
+'
+'    Dim ws As Worksheet
+'    Set ws = ActiveSheet
+'
+'    Application.FindFormat.Clear
+'    Application.FindFormat.MergeCells = True
+'
+'    Dim rng As Range, firstAddress As String
+'    'Countはオーバーフローしてしまうので
+'    Set rng = ws.UsedRange(ws.UsedRange.CountLarge)
+'
+'    Application.ScreenUpdating = False
+'
+'    Do
+'        Set rng = ws.UsedRange.Find(What:="", _
+'                                    After:=rng, _
+'                                    LookIn:=xlValues, _
+'                                    SearchFormat:=True)
+'
+'        If rng Is Nothing Then
+'            Exit Do
+'        End If
+'        If rng.Address = firstAddress Then
+'            Exit Do
+'        End If
+'        If firstAddress = "" Then
+'            firstAddress = rng.Address
+'        End If
+'
+'        If rng.MergeCells Then
+'            If rng.Address = rng.MergeArea(1).Address Then
+'                Call setComment(rng, MergeMsg)
+'            End If
+'        End If
+'    Loop
+'
+'    Application.ScreenUpdating = True
+'End Sub
+'
+'Sub setComment(ByVal rng As Range, _
+'               ByVal msg As String)
+'    Dim c As Comment
+'    Set c = rng.Comment
+'
+'    If Not c Is Nothing Then
+'        If c.Shape.AlternativeText <> msg Then
+'            Exit Sub '元からあったコメント
+'        End If
+'        c.Delete
+'    End If
+'
+'    Set c = rng.AddComment(msg)
+'    c.Visible = True
+'    c.Shape.AutoShapeType = msoShape32pointStar
+'    c.Shape.Fill.ForeColor.RGB = vbRed
+''　　c.Shape.TextFrame2.AutoSize = True 'このタイプには無効らしい
+'    c.Shape.Width = 160 'サイズは適当です
+'    c.Shape.Height = 55
+'    With c.Shape.TextFrame.Characters.Font
+'        .Size = 11
+'        .Bold = True
+'        .Color = vbWhite
+'    End With
+'
+'    'このVBAで作ったコメントかの判定に使ってみました。
+'    c.Shape.AlternativeText = msg
+'End Sub
+'
+'これは､検索と置換の書式で検索する機能です｡
