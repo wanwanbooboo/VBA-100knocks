@@ -1,0 +1,136 @@
+Option Explicit
+'#VBA100本ノック 13本目
+'選択セル（Selection:複数範囲あり）の文字列に「注意」という文字があった場合は、その「注意」の文字だけを"赤の太字"に設定してください。
+'セル以外（図形等）が選択されている場合は何もせずに正常終了するようにしてください。
+Sub vbaknocks_013()
+    
+    Dim char As Characters
+    Dim rng As Range
+    Dim i As Integer
+    
+    If Not TypeName(Selection) = "Range" Then
+        MsgBox "セルを選択してください"
+        Exit Sub
+    End If
+    
+    For Each rng In Selection
+        If rng.HasFormula Then GoTo continue
+        If Len(rng.Value) = 0 Then GoTo continue
+        For i = 1 To Len(rng.Value)
+            Set char = rng.Characters(Start:=i, Length:=2)
+            If char.Text = "注意" Then
+                With char.Font
+                    .Bold = True
+                    .ColorIndex = 3
+                End With
+            End If
+        Next i
+continue:
+    Next
+End Sub
+
+'解答例
+'Selectionは必ずしもセルとは限らず図形等の場合もあるのでTypeNameでセル選択か確認しています｡
+'また､計算式の場合は一部のFont変更はできないのでHasFormulaで外しています｡
+'範囲が大きいと処理時間がかかるので1列全体を上限にしました｡
+'文字列内の一部のFont設定はCharactersで設定します｡
+'
+'Sub VBA100_13_01()
+'    If TypeName(Selection) <> "Range" Then
+'        Exit Sub
+'    End If
+'    If Selection.CountLarge > Rows.Count Then
+'        MsgBox "選択範囲が大きすぎます。"
+'        Exit Sub
+'    End If
+'
+'    Const cns注意 = "注意"
+'    Dim rng As Range
+'    Dim ix As Long
+'
+'    For Each rng In Selection
+'        If Not rng.HasFormula Then
+'            ix = 1
+'            Do
+'                ix = InStr(ix, rng.Value, cns注意)
+'                If ix = 0 Then Exit Do
+'                With rng.Characters(ix, Len(cns注意))
+'                    .Font.Bold = True
+'                    .Font.Color = vbRed
+'                End With
+'                ix = ix + Len(cns注意)
+'            Loop
+'        End If
+'    Next
+'End Sub
+'
+'
+'先のVBAではInstrの開始位置をずらしながら"注意"を探しましたが、1文字ずつ確認していく方法もあります。
+'よほど大量に処理するのでなければどちらでも良いと思います｡
+'ですが、いずれにしても選択範囲が大きい場合（全セル選択）にこれでは対応できません。
+'
+'    Const cns注意 = "注意"
+'    Dim rng As Range
+'    Dim i As Long
+'
+'    For Each rng In Selection
+'        If Not rng.HasFormula Then
+'            For i = 1 To Len(rng.Value) - Len(cns注意) + 1
+'                If Mid(rng.Value, i, Len(cns注意)) = cns注意 Then
+'                    With rng.Characters(i, Len(cns注意))
+'                        .Font.Bold = True
+'                        .Font.Color = vbRed
+'                    End With
+'                End If
+'            Next
+'        End If
+'    Next
+'
+'
+'解決方法としてSpecialCellsを使う方法が回答されています｡
+'複数列全体や全セル選択時に､For EachでSelectionを処理したのでは､膨大な時間がかかってしまいます｡
+'処理対象は文字列が入っているセルだけです｡
+'そこで､
+'SpecialCells(xlCellTypeConstants, xlTextValues)
+'これで､文字列の入っているセルだけに絞っています｡
+'1 セルしか選択していない場合は､SpecialCellsは全セル対象になってしまうので､Intersectで本来の選択範囲にしています｡
+'
+'また参考として､正規表現を使って文字列を検索する方法を紹介しておきます｡
+'
+'Sub VBA100_13_03()
+'    Dim target As Range
+'    On Error Resume Next
+'    Set target = Intersect(Selection, Selection.SpecialCells(xlCellTypeConstants, xlTextValues))
+'    If target Is Nothing Then Exit Sub
+'
+'    Const cns注意 = "注意"
+'
+'    Dim reg As Object
+'    Set reg = CreateObject("VBScript.RegExp")
+'
+'    Dim rng As Range
+'    For Each rng In target
+'        Call CharactersFont(rng, cns注意, reg)
+'    Next
+'
+'    Set reg = Nothing
+'End Sub
+'
+'Sub CharactersFont(rng As Range, argStr As String, reg As Object)
+'    Dim mc As Object
+'    Dim m As Object
+'
+'    With reg
+'        .Pattern = argStr
+'        .Global = True
+'        Set mc = .Execute(rng.Value)
+'    End With
+'
+'    For Each m In mc
+'        With rng.Characters(m.FirstIndex + 1, m.Length)
+'            .Font.Bold = True
+'            .Font.Color = vbRed
+'        End With
+'    Next
+'End Sub
+
