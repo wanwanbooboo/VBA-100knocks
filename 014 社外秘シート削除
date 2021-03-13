@@ -1,0 +1,153 @@
+Option Explicit
+'#VBA100本ノック 14本目
+'客先へ送付するブックを作成します｡
+'シート名に「社外秘」の文字が含まれるシートを削除してください。
+'他のシートは計算式を消して値だけにしてください｡
+'※シート間参照の数式あり｡
+'※条件付き書式・入力規則は未使用。
+'※対象はアクティブブックで構いません｡
+
+Sub vbaknocks_014()
+
+    Dim ws As Worksheet
+    Dim rng As Range
+    Dim i As Integer: i = 0
+    
+    '事前に数式セルは値のみ残す
+    On Error Resume Next
+    For Each ws In Worksheets
+        For Each rng In ws.UsedRange.SpecialCells(xlCellTypeFormulas).Areas
+            rng.Value = rng.Value
+        Next
+    Next
+    
+    '全シート削除によるエラーを防ぐ
+    For Each ws In Worksheets
+        If ws.Name Like "*社外秘*" Then
+            i = i + 1
+        End If
+    Next
+    If i = Worksheets.Count Then
+        MsgBox "すべてのシートが消えてしまいます。もう一度確認してください。"
+        Exit Sub
+    End If
+
+    'シート名に社外秘の文字を含むシートを削除
+    Application.DisplayAlerts = False
+    For Each ws In Worksheets
+        If ws.Name Like "*社外秘*" Then
+            ws.Delete
+        End If
+    Next
+    Application.DisplayAlerts = True
+End Sub
+
+'解答例
+'
+'Sub VBA100_14_01()
+'    Const cns社外秘 = "*社外秘*"
+'    Dim wb As Workbook
+'    Set wb = ActiveWorkbook
+'
+'    '社外秘の全シート削除の可否
+'    If Not canDelete(wb, cns社外秘) Then
+'        MsgBox "送付すべきシートを再確認してください。"
+'        Exit Sub
+'    End If
+'
+'    With Application
+'        .ScreenUpdating = False
+'        .DisplayAlerts = False
+'        '手動計算で入力したままの可能性があるので一旦再計算
+'        .Calculation = xlCalculationAutomatic
+'        .Calculation = xlCalculationManual
+'    End With
+'
+'    '計算式はワークシートのみ
+'    Call pasteValues(wb, cns社外秘)
+'
+'    '削除は全種類のシートが対象
+'    Call delSheets(wb, cns社外秘)
+'
+'    '全シートを表示し、A1を選択しつつ先頭シートへ
+'    Call AllSheetsGotoA1(wb)
+'
+'    With Application
+'        .Calculation = xlCalculationAutomatic
+'        .DisplayAlerts = True
+'        .ScreenUpdating = True
+'    End With
+'End Sub
+'
+''社外秘シート以外で表示されているシートの存在確認
+'Function canDelete(ByVal wb As Workbook, ByVal aStr As String) As Boolean
+'    Dim sht As Object
+'    canDelete = True
+'    For Each sht In wb.Sheets
+'        If sht.Visible And Not sht.Name Like aStr Then
+'            Exit Function
+'        End If
+'    Next
+'    canDelete = False
+'End Function
+'
+''社外秘シート以外の全ワークシート値貼り付け
+'Sub pasteValues(ByVal wb As Workbook, ByVal aStr As String)
+'    Dim ws As Worksheet
+'    For Each ws In wb.Worksheets
+'        If Not ws.Name Like aStr Then
+'            'これが一番無難だと思います。
+'            ws.Cells.Copy
+'            ws.Cells.PasteSpecial Paste:=xlPasteValues
+'        End If
+'    Next
+'    Application.CutCopyMode = False
+'End Sub
+'
+''社外秘シートを削除する
+'Sub delSheets(ByVal wb As Workbook, ByVal aStr As String)
+'    Dim sht As Object
+'    For Each sht In wb.Sheets
+'        If sht.Name Like aStr Then
+'            'xlSheetVeryHidden対策
+'            sht.Visible = xlSheetVisible
+'            sht.Delete
+'        End If
+'    Next
+'End Sub
+'
+''全シートを表示し、A1を選択しつつ先頭シートへ
+''いったん全てのシートを表示します。
+''非表示のまま客先へ変なものを送付してしまわないように！
+'Sub AllSheetsGotoA1(ByVal wb As Workbook)
+'    Dim i As Long
+'    For i = wb.Worksheets.Count To 1 Step -1
+'        wb.Worksheets(i).Visible = xlSheetVisible
+'        Application.Goto wb.Worksheets(i).Range("A1"), True
+'    Next
+'End Sub
+'
+'上記VBAでは､全シートのループが何度も動きますが､これはほんの一瞬なので特に気にする必要は無いと思います｡
+'それより値貼り付けの方がはるかに時間がかかりますし､検討課題が多いと思います｡
+'
+'値貼り付けはUsedRange.Valueでも構いませんが､使用範囲が大きいとかえって時間もかかりますし､
+'極端に範囲が大きい場合は､メモリ不足で停止してしまいます｡
+'
+'ws.UsedRange.Value = ws.UsedRange.Value
+'
+'また､以下のように計算式のあるセル範囲だけを対象にする方法もあります｡
+'
+'On Error Resume Next
+'Dim rng As Range
+'For Each rng In ws.Cells.SpecialCells(xlCellTypeFormulas).Areas
+'    rng.Value = rng.Value
+'Next
+'
+'
+'SheetsコレクションとWorksheetsコレクションとの違いは理解しておいてください｡
+'Sheetsにはグラフシートも含まれますが､Worksheetsには含まれません｡
+'滅多に使用しないとは思いますが､万一にでもグラフシートが社外秘だったなんてことがあったら困ります｡
+'
+'そして､お客様先に送付する前には人間が目で最終確認すべきだと思います｡
+'「社外秘」の文字が間違っていたり、「社外持ち出し禁止」と書かれていたり・・・
+'考えたらきりがありません｡
