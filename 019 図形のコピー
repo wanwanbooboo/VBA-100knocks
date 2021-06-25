@@ -1,0 +1,150 @@
+Option Explicit
+'#VBA100本ノック 19本目
+'引数でWorksheetを受け取り以下の処理を行うSubを作成してください｡
+'シートの全図形について画像のように元図形の真横にくっ付けてコピー｡
+'繰り返し実行しても増殖しないように工夫する｡
+'※何らかの規則・制限を設けて構いません。
+'※入力規則のリストに気を付けて｡
+
+Sub ws()
+    Call vbaknocks_019(ActiveSheet)
+End Sub
+
+Sub vbaknocks_019(ws As Worksheet)
+
+    Dim shp As Shape
+    Dim myshp As Shape
+    
+    For Each shp In ws.Shapes
+        If shp.Type <> msoFormControl And shp.Name <> WorksheetFunction.Unichar(171581) Then
+            With shp
+                Set myshp = shp.Duplicate
+                myshp.Left = .Left + .Width
+                myshp.Top = .Top
+                .Name = WorksheetFunction.Unichar(171581) '魚へんに花(ほっけ)  Unicode文字
+                myshp.Name = WorksheetFunction.Unichar(171581)
+                Set myshp = Nothing
+            End With
+        End If
+    Next shp
+End Sub
+
+'シートの全図形はShapes(Shapeのコレクション)に入っています。
+'Shapesには入力規則のドロップダウンも含まれているので対象外にする必要があります｡
+'ShapeをコピーするメソッドはCopyですが､同一シート内の場合はDuplicateが便利です｡
+'複製した図形には特別な名前を付けて判別しています｡
+'
+'Sub VBA100_19_01(ByVal ws As Worksheet)
+'    Dim sp As Shape
+'
+'    For Each sp In ws.Shapes
+'        If sp.Name Like "*【VBA100_19】*" Then
+'            sp.Delete
+'        End If
+'    Next
+'
+'    For Each sp In ws.Shapes
+'        If sp.Type <> msoFormControl And sp.Type <> msoOLEControlObject Then
+'            With sp.Duplicate
+'                .Name = sp.Name & "【VBA100_19】"
+'                .Top = sp.Top
+'                .Left = sp.Left + sp.Width
+'            End With
+'        End If
+'    Next
+'End Sub
+'
+'
+'Duplicateはオブジェクトを返してくれるので便利ですね｡
+'増殖を抑える方法として､Nameの代わりにAlternativeTextを使うような方法も考えられそうです｡
+'AlternativeTextとCopyメソッドを使った場合のVBAサンプルは記事補足に掲載しました｡
+'
+'
+'補足
+'コピーの増殖を抑える方法について
+'元の図とコピーした図を判別する為には何らかの規則・制限が必要になります。
+'いろいろな方法が考えられますが､
+'・規則・制限による不便さ
+'・実装の容易さ
+'これらを天秤にかけることになります｡
+'規則は確実に守られるならどんな規則でも良いのですが､出来れば規則を知らなくても自然と守られるような規則が望ましいですね｡
+'名前に通常使わないような特別な文字列を使う方法は簡易かつかなり確実に守られると思います｡
+'最大の欠点は､これによりコピーされた図を､さらに手動でコピーした時になると思います｡
+'名前もそのままコピーされてしまうので､これは判別できなくなります｡
+'
+'CopyメソッドとDuplicateメソッド
+'ShapeのCopyメソッドは戻り値がなく､コピーされた図形が選択状態になります｡
+'対して､Duplicateメソッドは複製してオブジェクトが返されます｡
+'したがって､Duplicateを使うと図形を複製した後のオブジェクトが簡単に指定できるところが便利です｡
+'
+'入力規則のドロップダウンについて
+'入力規則のドロップダウンは､シートを開いて一度も使っていないとShapesに入っていないのですが､
+'セルを選択して､▽を表示した時点でShapesに入ってきます｡
+'そもそもフォームコントロールを共通に扱うのは難しいので､これを除外しました｡
+'ActiveXコントロールも併せて除外しています｡
+'
+'ShapeのType
+'MsoShapeType列挙    値  説明
+'msoAutoShape    1   オートシェイプ
+'msoCallout  2   引き出し線
+'msoCanvas   20  キャンバス
+'msoChart    3   グラフ
+'msoComment  4   コメント
+'msoDiagram  21  ダイアグラム
+'msoEmbeddedOLEObject    7   埋め込み OLE オブジェクト
+'msoFormControl  8   フォーム コントロール
+'msoFreeform 5   フリーフォーム
+'msoGroup    6   グループ
+'msoIgxGraphic   24  SmartArt グラフィック
+'msoInk  22  インク
+'msoInkComment   23  インク コメント
+'msoLine 9   直線
+'msoLinkedOLEObject  10  リンク OLE オブジェクト
+'msoLinkedPicture    11  リンク画像
+'msoMedia    16  メディア
+'msoOLEControlObject 12  OLE コントロール オブジェクト
+'msoPicture  13  画像
+'msoPlaceholder  14  プレースホルダー
+'msoScriptAnchor 18  スクリプト アンカー
+'msoShapeTypeMixed   -2  図形の種類の組み合わせ
+'msoTable    19  テーブル
+'msoTextBox  17  テキスト ボックス
+'msoTextEffect   15  テキスト効果
+'
+'CopyメソッドとAlternativeTextを使ったサンプル
+'Sub VBA100_19_02(ByVal ws As Worksheet)
+'    Dim sp As Shape
+'
+'    For Each sp In ws.Shapes
+'        If sp.AlternativeText Like "*【VBA100_19】*" Then
+'            sp.Delete
+'        End If
+'    Next
+'
+'    For Each sp In ws.Shapes
+'        If sp.Type <> msoFormControl And sp.Type <> msoOLEControlObject Then
+'            sp.Copy
+'            Application.Wait Now() + TimeSerial(0, 0, 1)
+'            ws.Paste
+'            Application.Wait Now() + TimeSerial(0, 0, 1)
+'            With ws.Shapes(ws.Shapes.Count)
+'                .AlternativeText = sp.AlternativeText & vbCrLf & "【VBA100_19】"
+'                .Top = sp.Top
+'                .Left = sp.Left + sp.Width
+'            End With
+'        End If
+'    Next
+'
+'    ws.Protect
+'    ws.Unprotect
+'End Sub
+'
+'複製した図形の判定にAlternativeTextを使用しています｡
+'Copyメソッドを使用しているので､コピー後のオブジェクトを特定するためにコピーされた図形はコレクションの最後に入ることを利用しています｡
+'これは､Selectionを使ってもよいでしょう｡
+'
+'ただし上記VBAのとおり､CopyおよびPasteでは､一定時間の待ちを設ける必要があります｡
+'待ちを入れなくても上手く動作する場合もありますが､かなりの確率でエラーになってしまいます｡
+'Shapeの数が多い場合は処理時間がとてもかかってしまいます｡
+'
+'VBA終了時に図形が選択された状態を解除するのに､シートをSelectせずに行う方法としてProtectを利用しています｡
