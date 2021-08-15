@@ -1,0 +1,119 @@
+Option Explicit
+
+Sub vbaknocks_021()
+
+    Dim bookname As String
+    Dim wbpath As String
+    Dim fullpath As String
+    Dim tmpfile As String
+    Dim lastday As String
+    
+    lastday = Format(Date - 30, "yyyymmdd")
+    wbpath = ThisWorkbook.path & "\BACKUP"
+    bookname = Replace(ThisWorkbook.Name, ".xlsm", "")
+    fullpath = wbpath & "\" & bookname & "_*" & ".xlsm"
+
+    If Dir(wbpath, vbDirectory) = "" Then
+        MsgBox "BACKUPフォルダが存在しません"
+        Exit Sub
+    End If
+
+    tmpfile = Dir(fullpath, vbNormal)
+
+    Do While tmpfile <> ""
+        tmpfile = Replace(tmpfile, bookname & "_", "")
+        tmpfile = Left(tmpfile, 8)
+        
+        If tmpfile <= lastday Then
+            Kill wbpath & "\" & bookname & "_" & tmpfile & "*.xlsm"
+        End If
+        
+        tmpfile = Dir()
+    Loop
+End Sub
+
+'解答例
+'フォルダ内のファイル一覧を取得するには､Dir関数またはFileSystemObjectのどちらかになるでしょう｡
+'まずはDir関数をDo…Loopで順次処理するVBAは覚えておいた方が良いでしょう。
+'フォルダに関係ないファイルを間違って入れてしまっている場合もあるので､ブック名のチェックはしたいですね｡
+'
+'Sub VBA100_21_01()
+'    Dim wb As Workbook
+'    Dim delLastDay As String
+'    Set wb = ThisWorkbook
+'    delLastDay = Format(Date - 30, "yyyymmdd")
+'
+'    Dim sPath As String
+'    Dim sFile As String
+'    Dim sExt As String
+'    sPath = wb.path & "\BACKUP"
+'    If Dir(sPath, vbDirectory) = "" Then Exit Sub
+'    sExt = Mid(wb.Name, InStrRev(wb.Name, ".") + 1)
+'    sFile = Left(wb.Name, InStrRev(wb.Name, ".") - 1)
+'
+'    Dim tFile As String
+'    tFile = Dir(sPath & "\" & sFile & "_*." & sExt)
+'    Do Until tFile = ""
+'        If tFile Like sFile & "_############." & sExt Then
+'            If Mid(tFile, InStrRev(tFile, "_") + 1, 8) <= delLastDay Then
+'                On Error Resume Next
+'                Kill sPath & "\" & tFile
+'            End If
+'        End If
+'        tFile = Dir()
+'    Loop
+'End Sub
+'
+'
+'    解答例
+'    Killは読み取り専用は削除できないのでエラー対応を入れました｡
+'    FSOは読み取り専用も削除できますが､それでも削除できない場合もあります｡
+'    （ファイルを開いている等）
+'    DirをFSOに書き換えたコードは記事補足に掲載しました｡
+'    ※掲載VBAは少々テスト不足かもしれません｡
+'
+'
+'    補足
+'    VBAは少々ごちゃごちゃしていますが､多くは文字列操作しているだけで､
+'    基本は､
+'        tFile = Dir(パス)
+'        Do Until tFile = ""
+'    　　　　・・・
+'            tFile = Dir()
+'        Loop
+'    この構造だけしっかり把握していれば問題ないでしょう｡
+'
+'    Dir関数 KillステートメントをFileSystemObjectに書き換えたものが以下になります｡
+'    Do...LoopがFor Each...Nextになっているだけで、基本構造は同じですね。
+'
+'    ※「Microsoft Scripting Runtime」を参照設定しています。
+'    Sub VBA100_21_02()
+'        Dim wb As Workbook
+'        Dim delLastDay As String
+'        Set wb = ThisWorkbook
+'        delLastDay = Format(Date - 30, "yyyymmdd")
+'
+'        Dim sPath As String
+'        Dim sFile As String
+'        Dim sExt As String
+'        Dim fso As Scripting.FileSystemObject
+'        Set fso = CreateObject("Scripting.FileSystemObject")
+'        sPath = wb.path & "\BACKUP"
+'        If Not fso.FolderExists(sPath) Then Exit Sub
+'        sExt = fso.GetExtensionName(wb.Name)
+'        sFile = fso.GetBaseName(wb.Name)
+'
+'        Dim tFile As File
+'        For Each tFile In fso.GetFolder(sPath).Files
+'            If tFile.Name Like sFile & "_############." & sExt Then
+'                If Mid(tFile.Name, InStrRev(tFile.Name, "_") + 1, 8) <= delLastDay Then
+'                    On Error Resume Next
+'                    tFile.Delete Force:=True
+'                End If
+'            End If
+'        Next
+'        Set fso = Nothing
+'    End Sub
+'
+'    文字列処理部分は､正規表現で処理する方法も考えられそうですが､
+'    今回はかえってコードが長くなりそうなのでサンプルは書きませんでした｡
