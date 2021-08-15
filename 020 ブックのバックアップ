@@ -1,0 +1,99 @@
+Option Explicit
+
+Sub vbaknocks_020()
+
+    Dim fname As String
+    Dim bookname As String
+     
+    If Dir("BACKUP", vbDirectory) = "" Then
+        MkDir ("BACKUP")
+    End If
+    
+    bookname = Replace(ThisWorkbook.Name, ".xlsm", "")
+    fname = ThisWorkbook.Path & "\BACKUP\" & bookname & "_" & Format(Now(), "YYYYMMDDHHMM") & ".xlsm"
+    
+    ThisWorkbook.SaveCopyAs fname
+     
+End Sub
+
+'解説
+'フォルダ作成はMkDirステートメントで出来ますが､フォルダが存在しているとエラーになるのでDir関数で存在確認する必要があります｡
+'Dir関数は制限もありますが､まずは使えるようになっておいた方が良いでしょう｡
+'開いているブックのコピーを作成するにはSaveCopyAsメソッドが便利です｡
+'
+'Sub VBA100_20_01()
+'    Dim wb As Workbook
+'    Dim sPath As String
+'    Dim sFile As String
+'    Dim sExt As String
+'
+'    Set wb = ThisWorkbook
+'    sPath = wb.Path & "\BACKUP"
+'    If Dir(sPath, vbDirectory) = "" Then
+'        MkDir sPath
+'    End If
+'
+'    sExt = Mid(wb.Name, InStrRev(wb.Name, "."))
+'    sFile = Left(wb.Name, InStrRev(wb.Name, ".") - 1) & _
+'            Format(Now(), "_yyyymmddhhmm") & sExt
+'    wb.SaveCopyAs sPath & "\" & sFile
+'End Sub
+'
+'hhmmまでにしたのは､SaveCopyAsが上書きになる事を意識してもらう為です｡
+'また､FileSystemObjectは是非使えるようになっておきたいところです｡
+'機能が豊富なので､必要な機能を順次使いながら覚えていけばよいと思います｡
+'VBAサンプルは記事補足にて｡
+'
+'
+'補足
+'実務としては､hhmmは中途半端なので普通はhhmmssにするかなとは思います｡
+'1 分ですと結構長いので､その間にどのような操作があるか分かりません｡
+'その間に､確認の為にバックアップファイルを開いてしまう事もあるかもしれません｡
+'その場合は､再実行するとSaveCopyAsがエラーになる可能性が出てきます｡
+'また､新規ブックにVBAを貼り付けて実行した場合､ThisWorkbook.Pathは空白になります｡
+'
+'上記を考慮し､FileSystemObjectを使ったものが以下になります｡
+'
+'Sub VBA100_20_02()
+'    Dim wb As Workbook
+'    Dim sPath As String
+'    Dim sFile As String
+'    Dim sExt As String
+'
+'    Set wb = ThisWorkbook
+'    If wb.Path = "" Then
+'        MsgBox "新規ブックです。" & vbLf & "保存してから実行してください。"
+'        Exit Sub
+'    End If
+'
+'    Dim fso As Object
+'    Set fso = CreateObject("Scripting.FileSystemObject")
+'
+'    sPath = wb.Path & "\BACKUP"
+'    If Not fso.FolderExists(sPath) Then
+'        fso.CreateFolder (sPath)
+'    End If
+'
+'    sExt = fso.GetExtensionName(wb.Name)
+'    sFile = fso.GetBaseName(wb.Name) & _
+'            Format(Now(), "_yyyymmddhhmm.") & sExt
+'    Set fso = Nothing
+'
+'    On Error Resume Next
+'    wb.SaveCopyAs sPath & "\" & sFile
+'    If Err Then
+'        MsgBox Err.Description
+'    End If
+'End Sub
+'
+'※上記VBAは先のDir MkDirと比べやすいように記述しました｡
+'
+'上記では､ThisWorkbook.Saveしていませんが､適宜必要に応じて入れることになると思います｡
+'
+'また､回答では､ファイルコピーを使ったものも多くありました｡
+'この方法ももちろん良いと思います｡
+'その場合は､
+'・ThisWorkbook.Saveをどうするか
+'・コピー先のファイルが存在していた場合
+'・コピー先が存在し削除できない場合
+'等々の検討が必要になってくると思います
